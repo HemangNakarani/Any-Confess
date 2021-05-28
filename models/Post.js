@@ -20,10 +20,11 @@ const postSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  hateSpeechFlag: {
-    type: Boolean,
-    default: false,
-  },
+  hashtags:{
+    type: Array,
+    default:["any-confess"]
+  }
+
 });
 
 module.exports = mongoose.model("Post", postSchema);

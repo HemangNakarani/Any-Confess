@@ -5,24 +5,21 @@ const Post = require("../models/Post");
 
 const toxicity = require("@tensorflow-models/toxicity");
 
-router.get("/", (req, res, next) => {
-  Post.find()
-    .exec()
-    .then((docs) => {
-      res.status(200).json(docs);
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json({
-        error: err,
-      });
-    });
-});
+// For the default version
+const algoliasearch = require("algoliasearch");
 
-// Find course by ID
-router.get("/:postID", (req, res, next) => {
-  const id = req.params.postID;
-  Course.findById(id)
+const algoappid = process.env.ALGO_APP_ID || "";
+const algoadminid = process.env.ALGO_ADMIN_ID || "";
+
+const client = algoliasearch(algoappid, algoadminid);
+const index = client.initIndex("hashtags");
+
+router.post("/by-date", (req, res, next) => {
+  const q_date = req.body.date;
+
+  Post.find({
+    timestamp: { $gte: new Date(q_date) },
+  })
     .exec()
     .then((docs) => {
       res.status(200).json(docs);
@@ -36,44 +33,57 @@ router.get("/:postID", (req, res, next) => {
 });
 
 // Add new course
-router.post("/", (req, res, next) => {
+router.post("/add", (req, res, next) => {
   const newPost = new Post({
     _id: new mongoose.Types.ObjectId(),
     identity: req.body.identity,
     text: req.body.text,
     timestamp: new Date(),
     likes: 0,
-    hateSpeechFlag: false,
   });
 
-  const threshold = 0.9;
+  toxicity.load().then((model) => {
+    model.classify(req.body.text).then((predictions) => {
+      if (predictions[predictions.length - 1].results[0].match) {
+        console.log("Toxic message detected. Deleting now...");
+        res.status(409).json({
+          message: "Your Post is Toxic Content, so can't be posted !",
+          createdPost: null,
+        });
+      } else {
+        newPost
+          .save()
+          .then((result) => {
+            let objectID = result._id;
+            delete result._id;
 
-  // Load the model. Users optionally pass in a threshold and an array of
-  // labels to include.
-  toxicity.load(threshold).then((model) => {
-    const sentences = ["you suck"];
-    model.classify(sentences).then((predictions) => {
-      res.send(predictions);
+            index
+              .saveObjects([{ objectID, ...result }])
+              .then(({ objectIDs }) => {
+                console.log(objectIDs);
+
+                res.status(201).json({
+                  message: "New Post created!",
+                  createdPost: result,
+                });
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  message: err,
+                  createdPost: null,
+                });
+              });
+          })
+          .catch((err) => {
+            console.log(err);
+            res.status(500).json({
+              message: err,
+              createdPost: null,
+            });
+          });
+      }
     });
   });
-
-  
-
-  //   newPost
-  //     .save()
-  //     .then((result) => {
-  //       console.log(result);
-  //       res.status(201).json({
-  //         message: "New Post created!",
-  //         createdPost: result,
-  //       });
-  //     })
-  //     .catch((err) => {
-  //       console.log(err);
-  //       res.status(500).json({
-  //         error: err,
-  //       });
-  //     });
 });
 
 module.exports = router;

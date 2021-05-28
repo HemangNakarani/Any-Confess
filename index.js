@@ -6,6 +6,8 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const postRoutes = require('./routes/PostManage');
+const commentRoutes = require('./routes/CommentManage');
+
 require('@tensorflow/tfjs-node');
 require("@tensorflow/tfjs");
 require("dotenv").config();
@@ -38,6 +40,7 @@ app.use('/whoami', (req, res) => {
 });
 
 app.use('/post',postRoutes);
+app.use('/comment',commentRoutes);
 
 // If request is able pass till here, route was not found. => Send 404 error
 app.use((req, res, next) => {

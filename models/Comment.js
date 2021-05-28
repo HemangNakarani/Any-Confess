@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const postSchema = new mongoose.Schema({
+const commentSchema = new mongoose.Schema({
   _id: mongoose.Schema.Types.ObjectId,
   parentId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -16,10 +16,6 @@ const postSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  hateSpeechFlag: {
-    type: Boolean,
-    default: false,
-  },
 });
 
-module.exports = mongoose.model("Post", postSchema);
+module.exports = mongoose.model("Comment", commentSchema);
