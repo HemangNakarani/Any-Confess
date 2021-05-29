@@ -2,14 +2,15 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const Post = require("../models/Post");
+require("dotenv").config();
 
 const toxicity = require("@tensorflow-models/toxicity");
 
 // For the default version
 const algoliasearch = require("algoliasearch");
 
-const algoappid = process.env.ALGO_APP_ID || "";
-const algoadminid = process.env.ALGO_ADMIN_ID || "";
+const algoappid = process.env.ALGOLIA_APP_ID || "";
+const algoadminid = process.env.ALGOLIA_ADMIN_API || "";
 
 const client = algoliasearch(algoappid, algoadminid);
 const index = client.initIndex("hashtags");
@@ -39,7 +40,7 @@ router.post("/add", (req, res, next) => {
     identity: req.body.identity,
     text: req.body.text,
     timestamp: new Date(),
-    likes: 0,
+    hashtags: req.body.hashtags,
   });
 
   toxicity.load().then((model) => {

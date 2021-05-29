@@ -16,10 +16,6 @@ const postSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  likes: {
-    type: Number,
-    required: true,
-  },
   hashtags:{
     type: Array,
     default:["any-confess"]

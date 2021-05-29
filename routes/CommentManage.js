@@ -22,6 +22,7 @@ router.get("/get/:postId", (req, res, next) => {
 router.post("/add/:postId", (req, res, next) => {
   const newComment = new Comment({
     _id: new mongoose.Types.ObjectId(),
+    identity: req.body.identity,
     parentId: req.params.postId,
     text: req.body.text,
     timestamp: new Date(),
@@ -41,12 +42,11 @@ router.post("/add/:postId", (req, res, next) => {
           .then((result) => {
             console.log(result);
             res.status(201).json({
-              message: "New Post created!",
+              message: "New Comment created!",
               createdPost: result,
             });
           })
           .catch((err) => {
-            console.log(err);
             res.status(500).json({
               message: err,
               createdPost: null,
